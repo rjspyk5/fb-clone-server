@@ -27,8 +27,14 @@ async function run() {
     const userCollection = client.db("fb").collection("userCollection");
     const postCollection = client.db("fb").collection("postCollection");
 
-    app.get("/", (req, res) => {
-      res.send("test");
+    app.get("/user", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await userCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
     });
 
     app.post("/user", async (req, res) => {
@@ -58,6 +64,20 @@ async function run() {
       const result = await postCollection.deleteOne(query);
       res.send(result);
     });
+
+    app.get("/total", async (req, res) => {
+      const totaluser = await userCollection.estimatedDocumentCount();
+      const totalpost = await postCollection.estimatedDocumentCount();
+      const comment = await postCollection
+        .aggregate([{ $unwind: "$comments" }, { $count: "totalComments" }])
+        .toArray();
+      const totalComments = comment.length > 0 ? comment[0].totalComments : 0;
+      res.send({ totalUser: totaluser, totalPost: totalpost, totalComments });
+    });
+    // app.get("/totalpost", async (req, res) => {
+    //   const result = await postCollection.estimatedDocumentCount();
+    //   res.send({ totalPost: result });
+    // });
 
     app.post("/likeunlike/:postid", async (req, res) => {
       const postId = req.params.postid;
