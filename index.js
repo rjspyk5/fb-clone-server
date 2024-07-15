@@ -26,6 +26,7 @@ async function run() {
     );
     const userCollection = client.db("fb").collection("userCollection");
     const postCollection = client.db("fb").collection("postCollection");
+    const storiesCollection = client.db("fb").collection("storiesCollection");
 
     app.get("/user", async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -80,6 +81,16 @@ async function run() {
       const totalComments = comment.length > 0 ? comment[0].totalComments : 0;
       res.send({ totalUser: totaluser, totalPost: totalpost, totalComments });
     });
+
+    app.post("/stories", async (req, res) => {
+      const data = req.body;
+      const result = await storiesCollection.insertOne(data);
+      res.send(result);
+    });
+    app.get("/stories", async (req, res) => {
+      const result = await storiesCollection.find().toArray();
+      res.send(result);
+    });
     // app.get("/totalpost", async (req, res) => {
     //   const result = await postCollection.estimatedDocumentCount();
     //   res.send({ totalPost: result });
@@ -108,6 +119,11 @@ async function run() {
         $push: { comments: data },
       };
       const result = await postCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    app.get("/followuser", async (req, res) => {
+      const result = await userCollection.find().limit(2).toArray();
       res.send(result);
     });
   } finally {
